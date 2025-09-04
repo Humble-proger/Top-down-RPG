@@ -10,13 +10,13 @@ public class PlayerAnimationController : MonoBehaviour
 
     private void OnEnable()
     {
-        _mover.Walk.performed += OnAnimationWalk;
-        _mover.DirectionWalk.performed += OnChangeDirectionWalk;
+        _mover.Walk += OnAnimationWalk;
+        _mover.DirectionWalk += OnChangeDirectionWalk;
     }
     private void OnDisable()
     {
-        _mover.Walk.performed -= OnAnimationWalk;
-        _mover.DirectionWalk.performed -= OnChangeDirectionWalk;
+        _mover.Walk -= OnAnimationWalk;
+        _mover.DirectionWalk -= OnChangeDirectionWalk;
     }
 
     private void OnAnimationWalk(bool value) 
@@ -29,3 +29,5 @@ public class PlayerAnimationController : MonoBehaviour
         _animator.SetBool(_down, value);
     }
 }
+
+public interface 
