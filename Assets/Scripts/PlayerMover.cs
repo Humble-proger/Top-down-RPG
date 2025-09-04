@@ -9,10 +9,19 @@ public class PlayerMover : MonoBehaviour
     private Rigidbody2D _rb;
     private Vector2 _startPosition;
     private bool _isWalk = false;
-    private bool _isDown = false;
+    private DirectionMove _oldDirection;
 
     public event Action<bool> Walk;
-    public event Action<bool> DirectionWalk;
+    public event Action<bool> DirectionWalkY;
+    public event Action<bool> DirectionWalkX;
+
+    public enum DirectionMove {
+        None,
+        Up,
+        Down,
+        Right,
+        Left
+    }
 
     private void Awake()
     {
@@ -22,36 +31,78 @@ public class PlayerMover : MonoBehaviour
     private void FixedUpdate()
     {
         Vector2 impulse = InputController.Instance.Move;
-        DefinitionMove(impulse);
+        ReportMove(DefinitionMove(impulse));
 
         _rb.position = _rb.position + _speed * (impulse * Time.fixedDeltaTime);
     }
 
-    private void DefinitionMove(Vector2 move) {
-        if (move == Vector2.zero) {
-            if (_isWalk) {
+    private DirectionMove DefinitionMove(Vector2 move) {
+        DirectionMove typeMove = DirectionMove.None;
+        if (move.y > 0)
+        {
+            typeMove = DirectionMove.Up;
+        }
+        else if (move.y < 0)
+        {
+            typeMove = DirectionMove.Down;
+        }
+        if (move.x > 0)
+        {
+            typeMove= DirectionMove.Right;
+        }
+        else if (move.x < 0)
+        {
+            typeMove = DirectionMove.Left;
+        }
+        return typeMove;
+    }
+
+    private void ReportMove(DirectionMove typeMove) 
+    {
+        if (DirectionMove.None == typeMove)
+        {
+            if (_isWalk)
+            {
                 _isWalk = false;
                 Walk?.Invoke(_isWalk);
             }
             return;
         }
-        if (move.y > 0)
-        {
-            if (_isDown)
-            {
-                _isDown = false;
-                DirectionWalk?.Invoke(_isDown);
-            }
-        }
         else {
-            if (!_isDown)
-            {
-                _isDown = true;
-                DirectionWalk?.Invoke(_isDown);
+            if (!_isWalk) {
+                _isWalk= true;
+                Walk?.Invoke(_isWalk);
+                ReportMoveXY(typeMove);
+                _oldDirection = typeMove;
+                return;
             }
         }
+
+        if (_oldDirection == typeMove) return;
+        ReportMoveXY(typeMove);
+        _oldDirection = typeMove;
     }
 
+    private void ReportMoveXY(DirectionMove typeMove)
+    {
+        switch (typeMove)
+        {
+            case DirectionMove.Up:
+                DirectionWalkY?.Invoke(true);
+                break;
+            case DirectionMove.Down:
+                DirectionWalkY?.Invoke(false);
+                break;
+            case DirectionMove.Left:
+                DirectionWalkX?.Invoke(false);
+                break;
+            case DirectionMove.Right:
+                DirectionWalkX?.Invoke(true);
+                break;
+            default:
+                break;
+        }
+    }
     public void Reset()
     {
         _rb.position = _startPosition;
