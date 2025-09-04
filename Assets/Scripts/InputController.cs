@@ -11,7 +11,7 @@ public class InputController : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null || Instance != this) {
+        if (Instance != null && Instance != this) {
             Destroy(gameObject);
             return;
         }
@@ -25,13 +25,17 @@ public class InputController : MonoBehaviour
     {
         _inputHandler.Player.Enable();
         _inputHandler.Player.Mouse.performed += OnMousePositionChanged;
+        _inputHandler.Player.Mouse.canceled += OnMousePositionChanged;
         _inputHandler.Player.Move.performed += OnMoveChanged;
+        _inputHandler.Player.Move.canceled += OnMoveChanged;
     }
 
     private void OnDisable()
     {
         _inputHandler.Player.Mouse.performed -= OnMousePositionChanged;
+        _inputHandler.Player.Mouse.canceled -= OnMousePositionChanged;
         _inputHandler.Player.Move.performed -= OnMoveChanged;
+        _inputHandler.Player.Move.canceled -= OnMoveChanged;
         _inputHandler.Player.Disable();
     }
 
