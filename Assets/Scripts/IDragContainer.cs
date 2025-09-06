@@ -1,0 +1,1 @@
+public interface IDragContainer<Item> : IDragDestination<Item>, IDragSource<Item> { }
