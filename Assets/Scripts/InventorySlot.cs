@@ -95,6 +95,6 @@ public class InventorySlot : MonoBehaviour, IDragContainer<ItemData>
 
     public ContainerInformation GetSenderInformation()
     {
-        return new ContainerInformation() { ContainerId = _inventoryId, ContainerType=_inventorySystem.ContainerType, Permitted=_inventorySystem.PermittedRecipients, NumSlot = _slotIndex };
+        return new ContainerInformation() { ContainerId = _inventoryId, ContainerType=_inventorySystem.ContainerType, Permitted=_inventorySystem.AllowedSenders, NumSlot = _slotIndex };
     }
 }
