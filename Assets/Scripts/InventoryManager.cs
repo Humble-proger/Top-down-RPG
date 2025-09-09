@@ -82,6 +82,26 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
+    private bool SendItem(int fromSlot, int toSlot, 
+        ref Inventory fromInventory, ref Inventory toInventory, int countAdd = 1) {
+        if (!fromInventory.TryGetItem(fromSlot, out InventoryEntry<ItemData> fromItem))
+            return false;
+        if (fromItem.Count < countAdd)
+        {
+            LoggerService.Debug($"(Inventory Manager) The requested number of objects to transfer ({countAdd}) exceeds the number currently stored ({fromItem.Count})");
+            return false;
+        }
+        if (!toInventory.TryAddItem(new InventoryEntry<ItemData> { Item = fromItem.Item, Count = countAdd }, toSlot, out int passedObjectsCount) || passedObjectsCount <= 0)
+            return false;
+        LoggerService.Info($"(Inventory Manager) {passedObjectsCount} objects transferred.");
+        int removedObjectCount = fromInventory.SubItem(passedObjectsCount, fromSlot);
+        if (removedObjectCount < passedObjectsCount)
+        {
+            LoggerService.Error($"(Inventory Manager) Remove {removedObjectCount} object(s), but {passedObjectsCount} were expected.");
+        }
+        return true;
+    }
+
     public bool TrySendBetweenInventories(int fromSlot, int toSlot,
         string fromInventoryId, string toInventoryId, int countAdd = 1)
     {
@@ -90,29 +110,12 @@ public class InventoryManager : MonoBehaviour
             if (!TryGetInventory(fromInventoryId, out Inventory fromInventory) ||
                 !TryGetInventory(toInventoryId, out Inventory toInventory))
                 return false;
-            if (!fromInventory.TryGetItem(fromSlot, out InventoryEntry<ItemData> fromItem))
-                return false;
-            if (fromItem.Count < countAdd)
-            {
-                LoggerService.Debug($"(Inventory Manager) The requested number of objects to transfer ({countAdd}) exceeds the number currently stored ({fromItem.Count})");
-                return false;
-            }
-            if (!toInventory.TryAddItem(new InventoryEntry<ItemData> { Item = fromItem.Item, Count = countAdd }, toSlot, out int passedObjectsCount) || passedObjectsCount <= 0)
-                return false;
-            LoggerService.Info($"(Inventory Manager) {passedObjectsCount} objects transferred.");
-            int removedObjectCount = fromInventory.SubItem(passedObjectsCount, fromSlot);
-            if (removedObjectCount < passedObjectsCount)
-            {
-                LoggerService.Error($"(Inventory Manager) Remove {removedObjectCount} object(s), but {passedObjectsCount} were expected.");
-            }
-            return true;
+            return SendItem(fromSlot, toSlot, ref fromInventory, ref toInventory, countAdd);
         }
         else {
             if (!TryGetInventory(fromInventoryId, out Inventory inventory))
                 return false;
-            if (!inventory.TryGetItem(fromSlot, out InventoryEntry<ItemData> fromItem))
-                return false;
-
+            return SendItem(fromSlot, toSlot, ref inventory, ref inventory, countAdd);
         }
     }
 }

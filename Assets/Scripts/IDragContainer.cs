@@ -1,1 +1,5 @@
-public interface IDragContainer<Item> : IDragDestination<Item>, IDragSource<Item> { }
+public interface IDragContainer {
+    ContainerInformation GetItem();
+    bool Equal(InventoryEntry<string> item);
+    bool IsEmpty();
+}
