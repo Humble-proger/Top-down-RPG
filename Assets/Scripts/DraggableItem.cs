@@ -6,12 +6,12 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 {
     private Vector3 _startPosition;
     private Transform _originanParent;
-    private IDragSource<ItemData> _source;
+    private IDragContainer _source;
     private Canvas _parentCanvas;
 
     private void Awake()
     {
-        _source = GetComponentInParent<IDragSource<ItemData>>();
+        _source = GetComponentInParent<IDragContainer>();
         _parentCanvas = GetComponentInParent<Canvas>();
     }
 
@@ -35,11 +35,11 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
         GetComponent<CanvasGroup>().blocksRaycasts = true;
         transform.SetParent(_originanParent, true);
 
-        IDragDestination<ItemData> container;
+        IDragContainer container;
 
         if (EventSystem.current.IsPointerOverGameObject() == false)
         {
-            container = _parentCanvas.GetComponent<IDragDestination<ItemData>>();
+            container = _parentCanvas.GetComponent<IDragContainer>();
         }
         else {
             container = GetContainer(eventData);
@@ -49,14 +49,14 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
             TransferItemSystem.Instance.TransferItem(_source, container);
         }
     }
-    private IDragDestination<ItemData> GetContainer(PointerEventData eventData)
+    private IDragContainer GetContainer(PointerEventData eventData)
     {
         List<RaycastResult> result = new();
         EventSystem.current.RaycastAll(eventData, result);
 
         foreach (RaycastResult raycastResult in result)
         {
-            if (raycastResult.gameObject.TryGetComponent<IDragDestination<ItemData>>(out var slot))
+            if (raycastResult.gameObject.TryGetComponent<IDragContainer>(out var slot))
             {
                 return slot;
             }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class InventoryManager : MonoBehaviour
 {
-    public InventoryManager Instance { get; private set; }
+    public static InventoryManager Instance { get; private set; }
 
     private Dictionary<string, Inventory> _inventories;
 
@@ -24,7 +24,7 @@ public class InventoryManager : MonoBehaviour
     public string CreateInventory(InventoryConfig config) 
     {
         string newInventoryId = Guid.NewGuid().ToString();
-        while (_inventories.TryAdd(newInventoryId, new Inventory(config, newInventoryId)))
+        while (!_inventories.TryAdd(newInventoryId, new Inventory(config, newInventoryId)))
             newInventoryId = Guid.NewGuid().ToString();
         LoggerService.Info($"(Inventory Manager) The inventory with id {newInventoryId} has been successfully created.");
         return newInventoryId;
@@ -51,6 +51,10 @@ public class InventoryManager : MonoBehaviour
     {
         return _inventories[fromInventoryId].CanAddItem(toType) && 
             _inventories[toInventoryId].CanAddItem(fromType);
+    }
+
+    public bool CanAddToInventory(ItemType fromType, string toInventory) {
+        return _inventories[toInventory].CanAddItem(fromType);
     }
 
     public bool TrySwapBetweenInventories(int fromSlot, int toSlot,

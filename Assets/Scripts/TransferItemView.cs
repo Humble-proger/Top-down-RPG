@@ -21,11 +21,12 @@ public class TransferItemView : MonoBehaviour {
     {
         _slider.wholeNumbers = true;
         _slider.minValue = 1;
-        _slider.maxValue = 1;
+        _slider.maxValue = 2;
         int val = Mathf.RoundToInt(_slider.value);
         _slider.value = val;
         _valueText.text = val.ToString();
         _objectstate = new bool[_objectBlockRaycast.Length];
+        gameObject.SetActive(false);
     }
 
     public void Enable()
@@ -67,11 +68,8 @@ public class TransferItemView : MonoBehaviour {
     private void OnChangeSliderValue(float arg0)
     {
         int intValue = Mathf.RoundToInt(arg0);
-
-        if (intValue != arg0) {
-            _slider.value = intValue;
-            UpdateTextSlider();
-        }
+        _slider.value = intValue;
+        UpdateTextSlider();
     }
 
     public void SetMaxSlider(int max) => _slider.maxValue = max;

@@ -1,5 +1,6 @@
 using System;
 
+[System.Serializable]
 public static class LoggerService
 {
     public enum LogLevel
@@ -11,7 +12,7 @@ public static class LoggerService
         Critical
     }
 
-    public static LogLevel CurrentLogLevel = LogLevel.Debug;
+    public static LogLevel CurrentLogLevel = LogLevel.Critical;
     public static bool EnableLogging = true;
     public static event Action<string, LogLevel> OnLogMessage;
 

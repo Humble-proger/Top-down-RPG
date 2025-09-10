@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
 
+[System.Serializable]
 public struct InventoryEntry<DataType> {
     public DataType Item;
     public int Count;
 
-    public void Clear() => Count = 0;
+    public void Clear() {
+        Item = default;
+        Count = 0;
+    }
     public static InventoryEntry<DataType> operator ++(InventoryEntry<DataType> item) {
         item.Count++;
         return item;
@@ -43,8 +47,7 @@ public struct InventoryEntry<DataType> {
     public override readonly bool Equals(object obj)
     {
         return obj is InventoryEntry<DataType> entry &&
-               EqualityComparer<DataType>.Default.Equals(Item, entry.Item) &&
-               Count == entry.Count;
+               EqualityComparer<DataType>.Default.Equals(Item, entry.Item);
     }
 
     public override readonly int GetHashCode()

@@ -1,9 +1,10 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class InventorySlotUI : MonoBehaviour, IDragContainer
 {
-    [SerializeField] private SpriteRenderer _icon;
+    [SerializeField] private Image _icon;
     [SerializeField] private TextMeshProUGUI _count;
     
     private int _slotIndex;
@@ -11,12 +12,13 @@ public class InventorySlotUI : MonoBehaviour, IDragContainer
     private string _itemId = string.Empty;
     private Sprite _iconSlot = null;
     private int _quantity = 0;
+    private ItemType _itemType;
 
-    public bool Equal(InventoryEntry<string> item) => item.Item == _itemId;
+    string IDragContainer.ItemId { get => _itemId; }
 
     public ContainerInformation GetItem()
     {
-        throw new System.NotImplementedException();
+        return new ContainerInformation { ContainerId=_inventoryId, NumSlot=_slotIndex, Quantity=_quantity, ItemType=_itemType };
     }
 
     public void Initialized(int slotIndex, string inventoryId)
@@ -25,16 +27,28 @@ public class InventorySlotUI : MonoBehaviour, IDragContainer
         _inventoryId = inventoryId;
     }
 
-    public bool IsEmpty()
-    {
-        throw new System.NotImplementedException();
-    }
+    public bool IsEmpty() => string.IsNullOrEmpty(_itemId);
 
     public void UpdateVisual(InventoryEntry<ItemData> item)
     {
-        _itemId = item.Item.ItemID;
-        _iconSlot = item.Item.Icon;
-        _quantity = item.Count;
+        if (item) {
+            _itemId = item.Item.ItemID;
+            _iconSlot = item.Item.Icon;
+            _quantity = item.Count;
+            _itemType = item.Item.Type;
 
+            _icon.sprite = _iconSlot;
+            if (_quantity > 1)
+                _count.text = _quantity.ToString();
+            else
+                _count.text = string.Empty;
+            return;
+        }
+        _itemId = string.Empty;
+        _quantity = 0;
+        _iconSlot = null;
+        _icon.sprite = null;
+        _count.text = string.Empty;
+        _itemType = default;
     }
 }

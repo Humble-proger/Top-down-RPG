@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using UnityEngine;
 
 public class TransferItemSystem : MonoBehaviour {
@@ -7,10 +5,8 @@ public class TransferItemSystem : MonoBehaviour {
     [SerializeField] private TransferItemView _view;
     public static TransferItemSystem Instance { get; private set; }
 
-    private InventoryEntry<ItemData> _val;
-    private IDragSource<ItemData> _source;
-    private IDragDestination<ItemData> _destination;
-    private int? _slotSource = null;
+    private ContainerInformation _sourceInfo;
+    private ContainerInformation _targetInfo;
 
     private void OnEnable()
     {
@@ -24,51 +20,10 @@ public class TransferItemSystem : MonoBehaviour {
         _view.Cancel -= OnCancelTransfer;
     }
 
-    private void OnCancelTransfer()
-    {
-        _source = null;
-        _destination = null;
-    }
-
-    private void OnConfirmTransfer(int obj)
-    {
-        if (_source != null && _destination != null) {
-            ProcessingAddTransfer(_source, _destination, _val, obj, _slotSource);
-            _source = null;
-            _destination = null;
-            _slotSource = null;
-        }
-    }
-
-    private void ProcessingAddTransfer(IDragSource<ItemData> source, IDragDestination<ItemData> destination, InventoryEntry<ItemData> val, int count, int? slotSource = null)
-    {
-        int passedObjectsCount;
-        if (slotSource == null)
-            passedObjectsCount = destination.AddItem(val.Count == count ? val : new InventoryEntry<ItemData>() { Item = val.Item, Count = count });
-        else
-            passedObjectsCount = destination.AddItem(val.Count == count ? val : new InventoryEntry<ItemData>() { Item = val.Item, Count = count }, (int) slotSource);
-        if (passedObjectsCount < 0 || passedObjectsCount > count)
-        {
-            Debug.LogWarning("TransferWarning !!! An error occurred while adding objects.");
-            return;
-        }
-        if (passedObjectsCount == 0)
-            return;
-        if (passedObjectsCount == val.Count)
-        {
-            source.RemoveItem();
-        }
-        else if (passedObjectsCount < val.Count)
-        {
-            int removeObjectCount = source.RemoveItem(passedObjectsCount);
-            if (removeObjectCount != passedObjectsCount)
-                Debug.LogWarning($"TransferWarning !!! Remove {removeObjectCount} object(s), but {passedObjectsCount} were expected.");
-        }
-    }
-
     private void Awake()
     {
-        if (Instance != null && Instance != this) {
+        if (Instance != null && Instance != this)
+        {
             Destroy(gameObject);
             return;
         }
@@ -76,45 +31,63 @@ public class TransferItemSystem : MonoBehaviour {
         DontDestroyOnLoad(gameObject);
     }
 
-    public void TransferItem(IDragSource<ItemData> source, IDragDestination<ItemData> destination) 
+    private void OnCancelTransfer()
     {
-        ContainerInformation sourceInformation = source.GetSenderInformation();
-        ContainerInformation destinationInformation = destination.GetDestinationInformation();
+        _sourceInfo.Clear();
+        _targetInfo.Clear();
+    }
 
-        if (!destinationInformation.Permitted.Contains(sourceInformation.ContainerType) ||
-            !sourceInformation.Permitted.Contains(destinationInformation.ContainerType)) {
-            return;
-        }
-
-        var item = source.GetItem();
-        
-        if (destination.Equal(item.Item))
-        {
-            if (item.Count > 0)
+    private void OnConfirmTransfer(int obj)
+    {
+        if (!_sourceInfo.IsEmpty() && !_targetInfo.IsEmpty()) {
+            if (!InventoryManager.Instance.TrySendBetweenInventories(
+                    _sourceInfo.NumSlot, _targetInfo.NumSlot,
+                    _sourceInfo.ContainerId, _targetInfo.ContainerId, obj))
             {
-                if (item.Count == 1)
-                {
-                    if (sourceInformation.ContainerId == destinationInformation.ContainerId)
-                        ProcessingAddTransfer(source, destination, item, 1, sourceInformation.NumSlot);
-                    else
-                        ProcessingAddTransfer(source, destination, item, 1);
-                }
-                else
-                {
-                    _val = item;
-                    _source = source;
-                    _destination = destination;
-                    _view.SetMaxSlider(item.Count);
-                    _view.ResetSlider();
-                    _view.Enable();
-                }
+                LoggerService.Debug("(TransferItemSystem) Couldn't move the element.");
             }
         }
-        else if (destination.IsEmpty()) {
-            if (sourceInformation.ContainerId == destinationInformation.ContainerId)
-                ProcessingAddTransfer(source, destination, item, item.Count, sourceInformation.NumSlot);
-            else 
-                ProcessingAddTransfer(source, destination, item, item.Count);
+        OnCancelTransfer();
+    }
+
+    public void TransferItem(IDragContainer source, IDragContainer destination) 
+    {
+        if (source.IsEmpty())
+        {
+            LoggerService.Debug("(TransferItemSystem) Attempt to move an empty element.");
+            return;
+        }
+        
+        ContainerInformation sourceInformation = source.GetItem();
+        ContainerInformation destinationInformation = destination.GetItem();
+
+        if (destination.IsEmpty() || source.Equal(destination))
+        {
+            if (sourceInformation.Quantity > 1 && InventoryManager.Instance.CanAddToInventory(sourceInformation.ItemType, destinationInformation.ContainerId))
+            {
+                _sourceInfo = sourceInformation;
+                _targetInfo = destinationInformation;
+                _view.SetMaxSlider(sourceInformation.Quantity);
+                _view.ResetSlider();
+                _view.Enable();
+            }
+            else if (sourceInformation.Quantity == 1)
+            {
+                if (!InventoryManager.Instance.TrySendBetweenInventories(
+                    sourceInformation.NumSlot, destinationInformation.NumSlot,
+                    sourceInformation.ContainerId, destinationInformation.ContainerId))
+                {
+                    LoggerService.Debug("(TransferItemSystem) Couldn't move the element.");
+                }
+            }
+            else
+            {
+                LoggerService.Warning("(TransferItemSystem) The number of the element is a negative number.");
+            }
+        }
+        else if (!InventoryManager.Instance.TrySwapBetweenInventories(sourceInformation.NumSlot, destinationInformation.NumSlot,
+            sourceInformation.ContainerId, destinationInformation.ContainerId)) {
+            LoggerService.Debug("(TransferItemSystem) Couldn't exchange items.");
         }
     }
 }

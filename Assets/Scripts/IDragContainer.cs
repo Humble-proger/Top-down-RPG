@@ -1,5 +1,6 @@
 public interface IDragContainer {
+    protected string ItemId { get; }
     ContainerInformation GetItem();
-    bool Equal(InventoryEntry<string> item);
+    public bool Equal(IDragContainer item) => ItemId == item.ItemId;
     bool IsEmpty();
 }

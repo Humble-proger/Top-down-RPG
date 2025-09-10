@@ -25,7 +25,7 @@ public class Inventory : IInventoryHandler<ItemData>
     }
 
     public bool IndexRange(int index) {
-        if (index > 0 && index < Capacity)
+        if (index >= 0 && index < Capacity)
             return true;
         LoggerService.Debug($"(Inventory) Index {index} out of range. The current inventory capacity is {Capacity}.");
         return false;
