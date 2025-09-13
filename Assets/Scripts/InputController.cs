@@ -2,12 +2,11 @@ using UnityEngine;
 
 public class InputController : MonoBehaviour 
 {
-    private InputSystem _inputHandler;
+    private InputState _currentState;
     
     public static InputController Instance { get; private set; }
 
-    public Vector2 MousePosition { get; private set; }
-    public Vector2 Move { get; private set; }
+    public InputSystem InputHandler { get; private set; }
 
     private void Awake()
     {
@@ -17,35 +16,31 @@ public class InputController : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        InputHandler = new();
 
-        _inputHandler = new InputSystem();
+        ChangeState(TypeInput.Player);
     }
 
-    private void OnEnable()
+    public void ChangeState(TypeInput type)
     {
-        _inputHandler.Player.Enable();
-        _inputHandler.Player.Mouse.performed += OnMousePositionChanged;
-        _inputHandler.Player.Mouse.canceled += OnMousePositionChanged;
-        _inputHandler.Player.Move.performed += OnMoveChanged;
-        _inputHandler.Player.Move.canceled += OnMoveChanged;
+        InputState state = InitiateState(type);
+
+        _currentState?.Exit();
+        _currentState = state;
+        _currentState?.Enter();
     }
 
-    private void OnDisable()
+    private InputState InitiateState(TypeInput type)
     {
-        _inputHandler.Player.Mouse.performed -= OnMousePositionChanged;
-        _inputHandler.Player.Mouse.canceled -= OnMousePositionChanged;
-        _inputHandler.Player.Move.performed -= OnMoveChanged;
-        _inputHandler.Player.Move.canceled -= OnMoveChanged;
-        _inputHandler.Player.Disable();
-    }
+        switch (type)
+        {
+            case TypeInput.Player:
+                return new InputPlayerState(Instance);
+            case TypeInput.Dialog:
+                return new InputDealogState(Instance);
+        }
 
-    private void OnMoveChanged(UnityEngine.InputSystem.InputAction.CallbackContext context)
-    {
-        Move = _inputHandler.Player.Move.ReadValue<Vector2>();
-    }
-
-    private void OnMousePositionChanged(UnityEngine.InputSystem.InputAction.CallbackContext context)
-    {
-        MousePosition = _inputHandler.Player.Mouse.ReadValue<Vector2>();
+        LoggerService.Critical("(InputController) An unknown type has been introduced.");
+        return null;
     }
 }
