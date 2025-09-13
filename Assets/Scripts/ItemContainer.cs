@@ -1,1 +1,0 @@
-public interface ItemContainer<Item> : ItemReciver<Item>, ItemSender<Item> { }
