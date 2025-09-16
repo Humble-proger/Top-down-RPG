@@ -9,7 +9,7 @@ public class InputDealogState : InputState
     public static event Action DialogNext;
     public static event Action DialogSelect;
     public static event Action DialogCancel;
-    public static float ScrollValue { get; private set; }
+    public static event Action<float> DialogScroll;
 
     public InputDealogState(InputController inputContainer) : base(inputContainer) {}
   
@@ -20,7 +20,6 @@ public class InputDealogState : InputState
         _inputContainer.InputHandler.Dialog.Prev.performed += OnDialogPrev;
         _inputContainer.InputHandler.Dialog.Select.performed += OnDialogSelected;
         _inputContainer.InputHandler.Dialog.Scroll.performed += OnScrollDialog;
-        _inputContainer.InputHandler.Dialog.Scroll.canceled += OnScrollDialog;
         _inputContainer.InputHandler.Dialog.Exit.performed += OnExitDialog;
     }
 
@@ -30,10 +29,8 @@ public class InputDealogState : InputState
         _inputContainer.InputHandler.Dialog.Prev.performed -= OnDialogPrev;
         _inputContainer.InputHandler.Dialog.Select.performed -= OnDialogSelected;
         _inputContainer.InputHandler.Dialog.Scroll.performed -= OnScrollDialog;
-        _inputContainer.InputHandler.Dialog.Scroll.canceled -= OnScrollDialog;
         _inputContainer.InputHandler.Dialog.Exit.performed -= OnExitDialog;
         _inputContainer.InputHandler.Dialog.Disable();
-        ScrollValue = 0f;
     }
 
     private void OnExitDialog(InputAction.CallbackContext _)
@@ -57,6 +54,7 @@ public class InputDealogState : InputState
     }
     private void OnScrollDialog(UnityEngine.InputSystem.InputAction.CallbackContext _)
     {
-        ScrollValue = _inputContainer.InputHandler.Dialog.Scroll.ReadValue<float>();
+        if (_inputContainer.UseScrollInDialog)
+            DialogScroll?.Invoke(_inputContainer.InputHandler.Dialog.Scroll.ReadValue<float>());
     }
 }

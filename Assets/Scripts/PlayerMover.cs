@@ -30,7 +30,7 @@ public class PlayerMover : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        Vector2 impulse = InputController.Instance.Move;
+        Vector2 impulse = InputPlayerState.Move;
         ReportMove(DefinitionMove(impulse));
 
         _rb.position = _rb.position + _speed * (impulse * Time.fixedDeltaTime);

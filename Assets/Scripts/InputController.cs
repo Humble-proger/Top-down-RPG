@@ -7,6 +7,7 @@ public class InputController : MonoBehaviour
     public static InputController Instance { get; private set; }
 
     public InputSystem InputHandler { get; private set; }
+    public bool UseScrollInDialog = true;
 
     private void Awake()
     {
@@ -18,7 +19,7 @@ public class InputController : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         InputHandler = new();
 
-        ChangeState(TypeInput.Player);
+        ChangeState(TypeInput.Dialog);
     }
 
     public void ChangeState(TypeInput type)
