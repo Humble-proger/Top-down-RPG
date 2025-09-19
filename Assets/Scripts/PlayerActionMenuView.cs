@@ -23,8 +23,6 @@ public class PlayerActionMenuView : MonoBehaviour
     public event Action<int> Select;
     public event Action CancelDialog;
 
-    public bool InRange(int index) => index >= 0 && index < _items.Count;
-
     private void OnEnable()
     {
         InputDealogState.DialogNext += ScrollDown;
@@ -50,16 +48,18 @@ public class PlayerActionMenuView : MonoBehaviour
             StartCoroutine(ScrollContentSmooth());
     }
 
-    public void InitializeItems(IEnumerable<string> thems)
+    public void InitializeItems(DialogueNode node)
     {
-        if (thems.Count() == 0) {
+        if (node.Options.Count() == 0) {
             LoggerService.Error("(DialogViewUI) An attempt to create an empty dialog");
             return;
         }
-        foreach (string message in thems) {
-            if (!string.IsNullOrEmpty(message))
+        for (int optionIndex = 0; optionIndex < node.Options.Count; optionIndex++) {
+            if (!node.Options[optionIndex].IsAvailable)
+                continue;
+            if (!string.IsNullOrEmpty(option.Text))
             {
-                CreateItem(message);
+                CreateItem(option.);
                 LoggerService.Info("(DialogViewUI) One element has been added.");
             }
             else
@@ -71,7 +71,7 @@ public class PlayerActionMenuView : MonoBehaviour
         _items[_currentIndex].SetHover(true, false);
     }
 
-    private void CreateItem(string text)
+    private void CreateItem(string text, int index)
     {
         ActionMenuItem item = _actionMenuPool.GetItem();
         

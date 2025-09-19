@@ -9,9 +9,11 @@ public class DialogueOption
     public QuestStatus RequiredQuestStatus; // required статус квеста
     public bool IsAvailable => CheckAvailability();
 
+    //[FixMe] Дописать логику
     private bool CheckAvailability()
     {
-        // Проверка условий для показа опции
+        if (RequiredQuestStatus == QuestStatus.Completed || RequiredQuestStatus == QuestStatus.InProgress)
+            return false;
         return true;
     }
 }
