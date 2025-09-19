@@ -3,39 +3,38 @@ using UnityEngine;
 
 public class ActionMenuPool : MonoBehaviour {
     [SerializeField] private ActionMenuItem _itemPrefab;
-    [SerializeField] private Transform _container;
+    [SerializeField] private RectTransform _container;
 
-    private Queue<ActionMenuItem> _actionMenuPool;
+    private readonly Queue<ActionMenuItem> _actionMenuPool = new();
 
-    public Bullet GetItem()
+    public ActionMenuItem GetItem()
     {
-        Bullet bullet;
-        if (_bulletPool.Count == 0)
+        ActionMenuItem menuItem;
+        if (_actionMenuPool.Count == 0)
         {
-            bullet = Instantiate(_bulletPrefab);
+            menuItem = Instantiate(_itemPrefab, _container);
         }
         else
         {
-            bullet = _bulletPool.Dequeue();
-            bullet.gameObject.SetActive(true);
-            bullet.Reset();
+            menuItem = _actionMenuPool.Dequeue();
+            menuItem.gameObject.SetActive(true);
         }
-        bullet.transform.parent = _container;
-        return bullet;
+        return menuItem;
     }
 
-    public void PutItem(Bullet obj)
+    public void PutItem(ActionMenuItem obj)
     {
-        _bulletPool.Enqueue(obj);
+        _actionMenuPool.Enqueue(obj);
+        obj.Reset();
         obj.gameObject.SetActive(false);
     }
 
     public void Reset()
     {
-        _bulletPool.Clear();
+        _actionMenuPool.Clear();
         foreach (Transform child in _container)
         {
-            if (child.TryGetComponent(out Bullet bullet))
+            if (child.TryGetComponent(out ActionMenuItem bullet))
             {
                 PutItem(bullet);
             }

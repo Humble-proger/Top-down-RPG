@@ -8,7 +8,7 @@ public class PlayerActionMenuView : MonoBehaviour
 {
     [Header("Reference")]
     [SerializeField] private RectTransform _content;
-    [SerializeField] private GameObject _itemPrefab;
+    [SerializeField] private ActionMenuPool _actionMenuPool;
 
     [Header("Setting")]
     [SerializeField] private float _itemSpacing = 10f;
@@ -42,7 +42,6 @@ public class PlayerActionMenuView : MonoBehaviour
         InputDealogState.DialogCancel -= Cancel;
         InputDealogState.DialogScroll -= MouseScroll;
     }
-
     private void MouseScroll(float scroll)
     {
         float newTargetPositionY = Mathf.Clamp(_targetPosition.y - scroll * _scrollSpeed, 0f, _heightVisibleBlock - _content.rect.height);
@@ -74,13 +73,10 @@ public class PlayerActionMenuView : MonoBehaviour
 
     private void CreateItem(string text)
     {
-        GameObject itemObj = Instantiate(_itemPrefab, _content);
+        ActionMenuItem item = _actionMenuPool.GetItem();
         
-        if (itemObj.TryGetComponent(out ActionMenuItem item))
-        {
-            item.Initialize(text, _items.Count, OnSelect, OnHover);
-            _items.Add(item);
-        }
+        item.Initialize(text, _items.Count, OnSelect, OnHover);
+        _items.Add(item);
     }
 
     private void OnHover(int index)
@@ -166,6 +162,9 @@ public class PlayerActionMenuView : MonoBehaviour
 
     public void Reset()
     {
+        foreach (var item in _items) {
+            _actionMenuPool.PutItem(item);
+        }
         _items.Clear();
         _currentIndex = 0;
     }

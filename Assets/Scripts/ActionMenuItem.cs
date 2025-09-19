@@ -1,9 +1,10 @@
-﻿using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using System.Collections;
+﻿using NUnit.Framework.Interfaces;
 using System;
+using System.Collections;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class ActionMenuItem : MonoBehaviour, IPointerEnterHandler
 {
@@ -71,4 +72,12 @@ public class ActionMenuItem : MonoBehaviour, IPointerEnterHandler
         }
     }
     public void OnPointerEnter(PointerEventData _) => _onHover?.Invoke(_index);
+
+    public void Reset()
+    {
+        _itemText.text = string.Empty;
+        _index = 0;
+        _onHover = null;
+        _selectionHighlight = null;
+    }
 }
