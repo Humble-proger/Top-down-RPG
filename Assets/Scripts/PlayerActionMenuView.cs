@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static UnityEngine.Rendering.VolumeComponent;
 
 public class PlayerActionMenuView : MonoBehaviour
 {
@@ -16,6 +17,7 @@ public class PlayerActionMenuView : MonoBehaviour
 
     private readonly List<ActionMenuItem> _items = new();
     private int _currentIndex = 0;
+    private int _currentIndexNode = 0;
     private Vector2 _targetPosition;
     private bool _coroutineWorked = false;
     private float _heightVisibleBlock = 0f;
@@ -40,6 +42,9 @@ public class PlayerActionMenuView : MonoBehaviour
         InputDealogState.DialogCancel -= Cancel;
         InputDealogState.DialogScroll -= MouseScroll;
     }
+
+    public bool NotInRange(int index) => index < 0 || index >= _items.Count;
+
     private void MouseScroll(float scroll)
     {
         float newTargetPositionY = Mathf.Clamp(_targetPosition.y - scroll * _scrollSpeed, 0f, _heightVisibleBlock - _content.rect.height);
@@ -48,18 +53,19 @@ public class PlayerActionMenuView : MonoBehaviour
             StartCoroutine(ScrollContentSmooth());
     }
 
-    public void InitializeItems(DialogueNode node)
+    public void InitializeItems(ref List<DialogueOption> options)
     {
-        if (node.Options.Count() == 0) {
+        if (options.Count() == 0) {
             LoggerService.Error("(DialogViewUI) An attempt to create an empty dialog");
             return;
         }
-        for (int optionIndex = 0; optionIndex < node.Options.Count; optionIndex++) {
-            if (!node.Options[optionIndex].IsAvailable)
+        for (int optionIndex = 0; optionIndex < options.Count; optionIndex++) {
+            DialogueOption option = options[optionIndex];
+            if (!option.IsAvailable)
                 continue;
             if (!string.IsNullOrEmpty(option.Text))
             {
-                CreateItem(option.);
+                CreateItem(option.Text, optionIndex);
                 LoggerService.Info("(DialogViewUI) One element has been added.");
             }
             else
@@ -75,27 +81,28 @@ public class PlayerActionMenuView : MonoBehaviour
     {
         ActionMenuItem item = _actionMenuPool.GetItem();
         
-        item.Initialize(text, _items.Count, OnSelect, OnHover);
+        item.Initialize(text, index, _items.Count, OnSelect, OnHover);
         _items.Add(item);
     }
 
-    private void OnHover(int index)
+    private void OnHover(int indexNode, int indexItem)
     {
-        if (!InRange(index) || index == _currentIndex) return;
+        if (NotInRange(indexItem) || indexItem == _currentIndex) return;
         _items[_currentIndex].SetHover(false);
-        _currentIndex = index;
-        _items[index].SetHover(true);
+        _currentIndex = indexItem;
+        _currentIndexNode = indexNode;
+        _items[indexItem].SetHover(true);
     }
 
-    private void OnSelect(int index)
+    private void OnSelect(int indexNode, int indexItem)
     {
-        if (!InRange(index))
+        if (NotInRange(indexItem))
         {
             LoggerService.Error("(DialogViewUI) index out of range!");
             return;
         }
-        _items[index].Select();
-        Select?.Invoke(index);
+        _items[indexItem].Select();
+        Select?.Invoke(indexNode);
     }
 
     private void UpdateScrollPosition()
@@ -137,7 +144,7 @@ public class PlayerActionMenuView : MonoBehaviour
 
     private void SelectItem()
     {
-        OnSelect(_currentIndex);
+        OnSelect(_currentIndexNode, _currentIndex);
     }
 
     private void ScrollUp()
@@ -167,5 +174,6 @@ public class PlayerActionMenuView : MonoBehaviour
         }
         _items.Clear();
         _currentIndex = 0;
+        _currentIndexNode = 0;
     }
 }

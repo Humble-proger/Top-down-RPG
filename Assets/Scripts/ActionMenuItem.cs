@@ -1,5 +1,4 @@
-﻿using NUnit.Framework.Interfaces;
-using System;
+﻿using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -21,9 +20,10 @@ public class ActionMenuItem : MonoBehaviour, IPointerEnterHandler
     [SerializeField] private AnimationCurve _animationHandler;
     [SerializeField] private float _animationDuration;
 
-    private int _index;
-    private Action<int> _onHover;
-    private Action<int> _onSelected;
+    private int _indexInItem;
+    private int _indexInNode;
+    private Action<int, int> _onHover;
+    private Action<int, int> _onSelected;
 
     private void OnEnable()
     {
@@ -35,13 +35,14 @@ public class ActionMenuItem : MonoBehaviour, IPointerEnterHandler
     }
     private void OnButtonSelect()
     {
-        _onSelected?.Invoke(_index);
+        _onSelected?.Invoke(_indexInNode, _indexInItem);
     }
-    public void Initialize(string text, int index, 
-        Action<int> onSelected, Action<int> onHover)
+    public void Initialize(string text, int indexNode, int indexItem,
+        Action<int, int> onSelected, Action<int, int> onHover)
     {
         _itemText.text = text;
-        _index = index;
+        _indexInNode = indexNode;
+        _indexInItem = indexItem;
         _onSelected = onSelected;
         _onHover = onHover;
     }
@@ -71,12 +72,13 @@ public class ActionMenuItem : MonoBehaviour, IPointerEnterHandler
             yield return null;
         }
     }
-    public void OnPointerEnter(PointerEventData _) => _onHover?.Invoke(_index);
+    public void OnPointerEnter(PointerEventData _) => _onHover?.Invoke(_indexInNode, _indexInItem);
 
     public void Reset()
     {
         _itemText.text = string.Empty;
-        _index = 0;
+        _indexInItem = 0;
+        _indexInNode = 0;
         _onHover = null;
         _selectionHighlight = null;
     }
